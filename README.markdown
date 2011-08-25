@@ -2,28 +2,38 @@
 
 Usage example:
 
-    Dim INI: Set INI = New INIFile
-    INI.SetFileName "C:\\MyIniFile.ini"
+    Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
     INI.SetValue "test section 1", "test key 1", "test value 1"
-    INI.SetValue "test section 1", "test key 2", "test value 2"
-    INI.SetValue "test section 2", "test key 3", "test value 3"
-    INI.SetValue "test section 2", "test key 4", "test value 4"
+    INI.SetValue "test section 2", "test key 2", "test value 2"
+    INI.SetValue "test section 3", "test key 3", "test value 3"
+    INI.SetValue "test section 4", "test key 4", "test value 4"
+    INI.Save ' file remains untouched until here
+    INI.Load ' reloads contents of the file
+    INI.SetValue "test section 5", "test key 5", "test value 5"
+    INI.Save
+    
+    MsgBox "test section 5, test key 5: " & INI.GetValue("test section 5", "test key 5")
 
-The above code snippet results in an INI file at C:\MyIniFile.ini that looks like this:
+The above code snippet results in an INI file named "MyIniFile.ini", located in the current working directory, that looks like the following output. It then displays a message box with the text "test section 5, test key 5: test value 5".
 
     [test section 1]
     test key 1=test value 1
-    test key 2=test value 2
     [test section 2]
+    test key 2=test value 2
+    [test section 3]
     test key 3=test value 3
+    [test section 4]
     test key 4=test value 4
+    [test section 5]
+    test key 5=test value 5
 
-Note that this class is non-destructive. Any sections and key/value pairs that are added via this class are added to the INI file. If you need to wipe the INI file clean for some reason before writing to it, then the above usage example would look like this:
+Note that this class is non-destructive. Any sections and key/value pairs that are added via this class are added to the INI file.
 
-    Dim INI: Set INI = New INIFile
-    INI.SetFileName "C:\\MyIniFile.ini"
-    INI.WriteFileContents ""
-    INI.SetValue "test section 1", "test key 1", "test value 1"
-    INI.SetValue "test section 1", "test key 2", "test value 2"
-    INI.SetValue "test section 2", "test key 3", "test value 3"
-    INI.SetValue "test section 2", "test key 4", "test value 4"
+*IMPORTANT!* The encoding of INIFile.vbs *MUST NOT* be changed to UTF-8. Doing so will result in the following error under Windows Script Host, which cannot handle scripts encoded in UTF-8:
+
+    Script: INIFile.vbs
+	Line: 1
+	Char: 1
+	Error: Invalid character
+	Code: 800A0408
+	Source: Microsoft VBScript compilation error

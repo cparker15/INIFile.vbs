@@ -36,17 +36,33 @@ Class INIFile
 		End If
 	End Function
 	
-	Public Sub Class_Initialize()
-		Set FSO       = CreateObject("Scripting.FileSystemObject")
-		FileName      = vbNullString
-		FileContents  = vbNullString
-		PosSection    = 0
-		PosEndSection = 0
+	Private Function GetFileContents()
+		If Not FileExists() Then
+			GetFileContents = vbNullString
+		ElseIf FileIsEmpty() Then
+			GetFileContents = vbNullString
+		Else
+			GetFileContents = FSO.OpenTextFile(FileName, ForReading).ReadAll
+		End If
+	End Function
+	
+	' Write contents to file, overwriting previous file contents. If the file doesn't already exist, it is created.
+	Private Sub WriteFileContents(ByVal MyContents)
+		Dim FileStream: Set FileStream = FSO.OpenTextFile(FileName, ForWriting, True)
+		FileStream.Write MyContents
+		FileStream.Close()
 	End Sub
 	
-	Public Sub SetFileName(MyFileName)
-		FileName = MyFileName
-	End Sub
+	Public Default Function Init(MyFileName)
+		Set FSO       = CreateObject("Scripting.FileSystemObject")
+		FileName      = MyFileName
+		PosSection    = 0
+		PosEndSection = 0
+		
+		Load
+		
+		Set Init = Me
+	End Function
 	
 	Public Function GetFileName()
 		GetFileName = Right(FileName, Len(FileName) - InStrRev(FileName, "\"))
@@ -64,27 +80,31 @@ Class INIFile
 		FileIsEmpty = FSO.OpenTextFile(FileName).AtEndOfStream
 	End Function
 	
-	Public Function GetFileContents()
-		If Not FileExists() Then
-			GetFileContents = vbNullString
-		ElseIf FileIsEmpty() Then
-			GetFileContents = vbNullString
-		Else
-			GetFileContents = FSO.OpenTextFile(FileName, ForReading).ReadAll
+	Public Function GetValue(MySection, MyKeyName)
+		Dim Value: Value = Empty
+		
+		' Find [Section] specified.
+		PosSection = InStr(1, FileContents, "[" & MySection & "]", vbTextCompare)
+		
+		If PosSection > 0 Then ' Section exists. 
+			PosEndSection = InStr(PosSection, FileContents, vbCrLf & "[") ' Find end of section.
+			
+			' Is this last section? If so, mark the end of it as the end of the String (file's contents).
+			If PosEndSection = 0 Then PosEndSection = Len(FileContents) + 1
+			
+			Dim SectionContents ' Separate section contents.
+    		SectionContents = Mid(FileContents, PosSection, PosEndSection - PosSection)
+			
+			If InStr(1, SectionContents, vbCrLf & MyKeyName & "=", vbTextCompare) > 0 Then
+				Value = SeparateField(SectionContents, vbCrLf & MyKeyName & "=", vbCrLf) ' Separate value of a key.
+			End If
 		End If
+		
+		GetValue = Value ' Return the corresponding value for the key specified.
 	End Function
 	
-	' Write contents to file, overwriting previous file contents. If the file doesn't already exist, it is created.
-	Public Sub WriteFileContents(ByVal MyContents)
-		Dim FileStream: Set FileStream = FSO.OpenTextFile(FileName, ForWriting, True)
-		FileStream.Write MyContents
-		FileStream.Close()
-	End Sub
-	
 	Public Sub SetValue(MySection, MyKeyName, MyValue)
-		FileContents = GetFileContents()
-		
-		' Find section
+		' Find [Section] specified.
 		PosSection = InStr(1, FileContents, "[" & MySection & "]", vbTextCompare)
 		
 		If PosSection > 0 Then ' Section exists.
@@ -124,39 +144,13 @@ Class INIFile
 			
 			FileContents = FileContents & "[" & MySection & "]" & vbCrLf & MyKeyName & "=" & MyValue
 		End If ' If PosSection > 0 Then
-		
-		WriteFileContents FileContents
 	End Sub
 	
-	Public Function GetValue(MySection, MyKeyName, MyDefault)
-		Dim SectionContents, Value, Found
-		
-		Found = False
-		FileContents = GetFileContents()
-		
-		PosSection = InStr(1, FileContents, "[" & MySection & "]", vbTextCompare) ' Find [Section] specified.
-		
-		If PosSection > 0 Then ' Section exists. 
-			PosEndSection = InStr(PosSection, FileContents, vbCrLf & "[") ' Find end of section.
-			
-			' Is this last section? If so, mark the end of it as the end of the String (file's contents).
-			If PosEndSection = 0 Then PosEndSection = Len(FileContents) + 1
-			
-    		SectionContents = Mid(FileContents, PosSection, PosEndSection - PosSection) ' Separate section contents.
-			
-			If InStr(1, SectionContents, vbCrLf & MyKeyName & "=", vbTextCompare) > 0 Then
-				Value = SeparateField(SectionContents, vbCrLf & MyKeyName & "=", vbCrLf) ' Separate value of a key.
-				
-				If Value <> vbNullString Then
-					Found = True ' Only specify that the key/value pair was found if there's a corresponding value for the key.
-				End If
-			End If
-		End If
-		
-		If Found = False Then
-			Value = MyDefault
-		End If
-		
-		GetValue = Value ' Return the corresponding value for the key specified.
-	End Function
+	Public Sub Load
+		FileContents = GetFileContents
+	End Sub
+	
+	Public Sub Save
+		WriteFileContents(FileContents)
+	End Sub
 End Class
