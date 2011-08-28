@@ -1,6 +1,10 @@
 ﻿INIFile.vbs is a VBScript class for reading from and writing to INI files. It can be used anywhere VBScript can be used, such as in an HTML Application (HTA) or in a Windows Script Host (WSH) script.
 
-Usage example:
+Usage Examples
+==============
+
+SetValue(), GetValue(), Load(), Save()
+--------------------------------------
 
 ```
 Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
@@ -16,7 +20,7 @@ INI.Save
 MsgBox "test section 5, test key 5: " & INI.GetValue("test section 5", "test key 5")
 ```
 
-The above example results in an INI file named "MyIniFile.ini", located in the current working directory, that looks like the following output. It then displays a message box with the text "test section 5, test key 5: test value 5".
+This example results in an INI file named "MyIniFile.ini", located in the current working directory, that looks like the following output.
 
 ```
 [test section 1]
@@ -31,7 +35,12 @@ test key 4=test value 4
 test key 5=test value 5
 ```
 
-The following example demonstrates how one could use the GetSections() and GetKeys() methods to create an outline of an INI file.
+It then displays a message box with the text `test section 5, test key 5: test value 5`.
+
+GetSections(), GetKeys()
+------------------------
+
+This example demonstrates how one could use the GetSections() and GetKeys() methods to create an outline of an INI file.
 
 ```
 Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
@@ -58,7 +67,25 @@ End If
 MsgBox Msg
 ```
 
-**NOTES**
+Assuming the **SetValue(), GetValue(), Load(), Save()** example code was just run, this code produces a message box with the following text:
+
+```
+INI File Outline:
+
+- test section 1
+  - test key 1
+- test section 2
+  - test key 2
+- test section 3
+  - test key 3
+- test section 4
+  - test key 4
+- test section 5
+  - test key 5
+```
+
+Notes
+=====
 
 - INIFile.vbs does not support comments in INI files. It has not been tested with INI files containing comments.
 
