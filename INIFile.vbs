@@ -19,10 +19,10 @@ Option Explicit
 Const ForReading = 1, ForWriting = 2, ForAppending = 8
 
 Class INIFile
-	Private FSO, FileName, FileContents, PosSection, PosEndSection
+	Private FSO, FileName, FileContents
 	
-	' Separate one field between Start and End
-	Private Function SeparateField(ByVal MyFrom, ByVal MyStart, ByVal MyEnd)
+	' Extract a key's value from its line in the INI file
+	Private Function ExtractValue(ByVal MyFrom, ByVal MyStart, ByVal MyEnd)
 		Dim PosS: PosS = InStr(1, MyFrom, MyStart, 1)
 		
 		If PosS > 0 Then
@@ -30,9 +30,9 @@ Class INIFile
 			Dim PosE: PosE = InStr(PosS, MyFrom, MyEnd, 1)
 			If PosE = 0 Then PosE = InStr(PosS, MyFrom, vbCrLf, 1)
 			If PosE = 0 Then PosE = Len(MyFrom) + 1
-			SeparateField = Mid(MyFrom, PosS, PosE - PosS)
+			ExtractValue = Mid(MyFrom, PosS, PosE - PosS)
 		Else
-			SeparateField = vbNullString
+			ExtractValue = vbNullString
 		End If
 	End Function
 	
@@ -46,6 +46,27 @@ Class INIFile
 		End If
 	End Function
 	
+	Private Function GetSectionContents(MySection)
+		Dim SectionContents: SectionContents = vbNullString
+		Dim PosSection: PosSection = 0
+		Dim PosEndSection: PosEndSection = 0
+		
+		' Find [Section] specified.
+		PosSection = InStr(1, FileContents, "[" & MySection & "]", vbTextCompare)
+		
+		If PosSection > 0 Then ' Section exists.
+			PosEndSection = InStr(PosSection, FileContents, vbCrLf & "[") ' Find end of section.
+			
+			' Is this last section? If so, mark the end of it as the end of the String (file's contents).
+			If PosEndSection = 0 Then PosEndSection = Len(FileContents) + 1
+			
+			' Separate section contents.
+    		SectionContents = Mid(FileContents, PosSection, PosEndSection - PosSection)
+		End If
+		
+		GetSectionContents = SectionContents
+	End Function
+	
 	' Write contents to file, overwriting previous file contents. If the file doesn't already exist, it is created.
 	Private Sub WriteFileContents(ByVal MyContents)
 		Dim FileStream: Set FileStream = FSO.OpenTextFile(FileName, ForWriting, True)
@@ -54,10 +75,8 @@ Class INIFile
 	End Sub
 	
 	Public Default Function Init(MyFileName)
-		Set FSO       = CreateObject("Scripting.FileSystemObject")
-		FileName      = MyFileName
-		PosSection    = 0
-		PosEndSection = 0
+		Set FSO  = CreateObject("Scripting.FileSystemObject")
+		FileName = MyFileName
 		
 		Load
 		
@@ -80,49 +99,88 @@ Class INIFile
 		FileIsEmpty = FSO.OpenTextFile(FileName).AtEndOfStream
 	End Function
 	
-	Public Function GetValue(MySection, MyKeyName)
-		Dim Value: Value = Empty
+	Public Function GetSections()
+		Dim SectionsRegExp: Set SectionsRegExp = New RegExp
 		
-		' Find [Section] specified.
-		PosSection = InStr(1, FileContents, "[" & MySection & "]", vbTextCompare)
+		' Matches a [Section] on its own line. Could be at the very beginning of the file,
+		' in the middle of the file, or at the very end of the file (an empty [Section]).
+		SectionsRegExp.Pattern = "([\r\n]\[|^\[)([^\]]*)(\][\r\n]|\]$)"
 		
-		If PosSection > 0 Then ' Section exists. 
-			PosEndSection = InStr(PosSection, FileContents, vbCrLf & "[") ' Find end of section.
-			
-			' Is this last section? If so, mark the end of it as the end of the String (file's contents).
-			If PosEndSection = 0 Then PosEndSection = Len(FileContents) + 1
-			
-			Dim SectionContents ' Separate section contents.
-    		SectionContents = Mid(FileContents, PosSection, PosEndSection - PosSection)
-			
-			If InStr(1, SectionContents, vbCrLf & MyKeyName & "=", vbTextCompare) > 0 Then
-				Value = SeparateField(SectionContents, vbCrLf & MyKeyName & "=", vbCrLf) ' Separate value of a key.
-			End If
+		' Matches all occurrences, not just the first one.
+		SectionsRegExp.Global = True
+		
+		Dim SectionMatches: Set SectionMatches = SectionsRegExp.Execute(FileContents)
+		
+		Dim Sections: Sections = Array()
+		Dim Index
+		
+		If SectionMatches.Count > 0 Then
+			For Index = 0 To SectionMatches.Count - 1
+				ReDim Preserve Sections(Index)
+				Sections(Index) = SectionMatches.Item(Index).SubMatches(1)
+			Next
 		End If
 		
-		GetValue = Value ' Return the corresponding value for the key specified.
+		GetSections = Sections
 	End Function
 	
-	Public Sub SetValue(MySection, MyKeyName, MyValue)
-		' Find [Section] specified.
-		PosSection = InStr(1, FileContents, "[" & MySection & "]", vbTextCompare)
+	Public Function GetKeys(MySection)
+		' Grab the contents of the specified [Section]
+		Dim SectionContents: SectionContents = GetSectionContents(MySection)
 		
-		If PosSection > 0 Then ' Section exists.
-			PosEndSection = InStr(PosSection, FileContents, vbCrLf & "[") ' Find end of section.
+		Dim KeysRegExp: Set KeysRegExp = New RegExp
+		
+		' Matches a key= on its own line; captures the name of the key.
+		KeysRegExp.Pattern = "[\r\n]{1,2}([^=]*)="
+		
+		' Matches all occurrences, not just the first one.
+		KeysRegExp.Global = True
+		
+		Dim KeyMatches: Set KeyMatches = KeysRegExp.Execute(SectionContents)
+		
+		Dim Keys: Keys = Array()
+		Dim Index
+		
+		If KeyMatches.Count > 0 Then
+			For Index = 0 To KeyMatches.Count - 1
+				ReDim Preserve Keys(Index)
+				Keys(Index) = KeyMatches.Item(Index).SubMatches(0)
+			Next
+		End If
+		
+		GetKeys = Keys
+	End Function
+	
+	Public Function GetValue(MySection, MyKeyName)
+		Dim Value
+		
+		' Grab the contents of the specified [Section]
+		Dim SectionContents: SectionContents = GetSectionContents(MySection)
+		
+		' Look for the key=
+		If InStr(1, SectionContents, vbCrLf & MyKeyName & "=", vbTextCompare) > 0 Then
+			' Extract the value from the key= line.
+			Value = ExtractValue(SectionContents, vbCrLf & MyKeyName & "=", vbCrLf)
+		End If
+		
+		GetValue = Value
+	End Function
+	
+	' Unlike Dictionary's Add() method, SetValue() can change the value of an existing key.
+	Public Sub SetValue(MySection, MyKeyName, MyValue)
+		' Grab the contents of the specified [Section]
+		Dim OldSectionContents: OldSectionContents = GetSectionContents(MySection)
+		
+		If OldSectionContents <> vbNullString Then ' Section exists.
+			Dim KeyName, Line, Found, NewSectionContents
 			
-			' Is this last section? If so, mark the end of it as the end of the String (file's contents).
-			If PosEndSection = 0 Then PosEndSection = Len(FileContents) + 1
-			
-			Dim OldSectionContents, NewSectionContents, Line ' Separate section contents
-			OldSectionContents = Mid(FileContents, PosSection, PosEndSection - PosSection)
 			OldSectionContents = Split(OldSectionContents, vbCrLf)
-			
-			Dim KeyName, Found
 			KeyName = LCase(MyKeyName & "=") ' Temp variable to find a key.
 			
+			' Copy each line over; if the key matches, change its value first.
 			For Each Line In OldSectionContents
 				If LCase(Left(Line, Len(KeyName))) = KeyName Then
-					Line = MyKeyName & "=" & MyValue
+					Line = KeyName & MyValue
 					Found = True
 				End If
 				
@@ -130,20 +188,25 @@ Class INIFile
 			Next
 			
 			If IsEmpty(Found) Then ' Key not found.
-				NewSectionContents = NewSectionContents & MyKeyName & "=" & MyValue ' Add it at the end of section.
+				' Append it to the [Section].
+				NewSectionContents = NewSectionContents & KeyName & MyValue
 			Else ' Key found.
-				NewSectionContents = Left(NewSectionContents, Len(NewSectionContents) - 2) ' Remove last vbCrLf. vbCrLf is at PosEndSection.
+				' Remove last vbCrLf. There's already a vbCrLf at the end of the [Section].
+				NewSectionContents = Left(NewSectionContents, Len(NewSectionContents) - 2)
 			End If
 			
 			' Combine pre-section, new section, and post-section data.
 			FileContents = Left(FileContents, PosSection-1) & NewSectionContents & Mid(FileContents, PosEndSection)
 		Else ' Section doesn't exist.
+			' If the file doesn't already end in a new line, and if the file isn't empty...
 			If Right(FileContents, 2) <> vbCrLf And Len(FileContents) > 0 Then
-				FileContents = FileContents & vbCrLf ' Add section data at the end of file contents.
+				' Add a new line to the end of the file
+				FileContents = FileContents & vbCrLf
 			End If
 			
+			' Add section data at the end of file contents.
 			FileContents = FileContents & "[" & MySection & "]" & vbCrLf & MyKeyName & "=" & MyValue
-		End If ' If PosSection > 0 Then
+		End If ' If OldSectionContents <> vbNullString Then
 	End Sub
 	
 	Public Sub Load

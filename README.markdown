@@ -14,7 +14,7 @@ Usage example:
     
     MsgBox "test section 5, test key 5: " & INI.GetValue("test section 5", "test key 5")
 
-The above code snippet results in an INI file named "MyIniFile.ini", located in the current working directory, that looks like the following output. It then displays a message box with the text "test section 5, test key 5: test value 5".
+The above example results in an INI file named "MyIniFile.ini", located in the current working directory, that looks like the following output. It then displays a message box with the text "test section 5, test key 5: test value 5".
 
     [test section 1]
     test key 1=test value 1
@@ -27,13 +27,42 @@ The above code snippet results in an INI file named "MyIniFile.ini", located in 
     [test section 5]
     test key 5=test value 5
 
-Note that this class is non-destructive. Any sections and key/value pairs that are added via this class are added to the INI file.
+The following example demonstrates how one could use the GetSections() and GetKeys() methods to create an outline of an INI file.
 
-*IMPORTANT!* The encoding of INIFile.vbs *MUST NOT* be changed to UTF-8. Doing so will result in the following error under Windows Script Host, which cannot handle scripts encoded in UTF-8:
+    Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
+    Dim Msg: Msg = "INI File Outline:" & vbCrLf & vbCrLf
+    
+    Dim Sections: Sections = INI.GetSections()
+    Dim Section
+    
+    If UBound(Sections) > -1 Then
+    	For Each Section In Sections
+    		Msg = Msg & "- " & Section & vbCrLf
+    		
+    		Dim Keys: Keys = INI.GetKeys(Section)
+    		Dim Key
+    		
+    		For Each Key In Keys
+    			Msg = Msg & "  - " & Key & vbCrLf
+    		Next
+    	Next
+    Else
+    	Msg = "INI File Is Empty"
+    End If
+    
+    MsgBox Msg
+
+**NOTES**
+
+- INIFile.vbs does not support comments in INI files. It has not been tested with INI files containing comments.
+
+- INIFile.vbs is non-destructive. Any sections and key/value pairs that are added via INIFile.vbs are appended to the INI file.
+
+- *IMPORTANT!* The encoding of INIFile.vbs *MUST NOT* be changed to UTF-8. Doing so will result in the following error under Windows Script Host, which cannot handle scripts encoded in UTF-8.
 
     Script: INIFile.vbs
-	Line: 1
-	Char: 1
-	Error: Invalid character
-	Code: 800A0408
-	Source: Microsoft VBScript compilation error
+    Line: 1
+    Char: 1
+    Error: Invalid character
+    Code: 800A0408
+    Source: Microsoft VBScript compilation error
