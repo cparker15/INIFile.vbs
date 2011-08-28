@@ -101,10 +101,10 @@ Notes
 - **IMPORTANT!** The encoding of INIFile.vbs __must *not*__ be changed to UTF-8. Doing so will result in the following error under Windows Script Host, which cannot handle scripts encoded in UTF-8:
 
 ```
-Script: INIFile.vbs
-Line: 1
-Char: 1
-Error: Invalid character
-Code: 800A0408
-Source: Microsoft VBScript compilation error
+Script:  INIFile.vbs
+Line:    1
+Char:    1
+Error:   Invalid character
+Code:    800A0408
+Source:  Microsoft VBScript compilation error
 ```
