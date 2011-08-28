@@ -60,7 +60,7 @@ If UBound(Sections) > -1 Then ' if there are no sections, the array is empty (UB
 		Next
 	Next
 Else
-	Msg = "INI File Is Empty"
+	Msg = Msg & "INI File Is Empty"
 End If
 
 MsgBox Msg
@@ -81,6 +81,7 @@ INI File Outline:
   - test key 4
 - test section 5
   - test key 5
+
 ```
 
 If this code is run on an empty file, or a randomly formatted file with no `[Sections]`, the message box will contain the following text:
