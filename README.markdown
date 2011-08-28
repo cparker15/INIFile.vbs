@@ -98,7 +98,7 @@ Notes
 
 - INIFile.vbs is non-destructive. Any sections and key/value pairs that are added via INIFile.vbs are appended to the INI file.
 
-- *IMPORTANT!* The encoding of INIFile.vbs *MUST NOT* be changed to UTF-8. Doing so will result in the following error under Windows Script Host, which cannot handle scripts encoded in UTF-8.
+- **IMPORTANT!** The encoding of INIFile.vbs **must *not*** be changed to UTF-8. Doing so will result in the following error under Windows Script Host, which cannot handle scripts encoded in UTF-8:
 
 ```
 Script: INIFile.vbs
