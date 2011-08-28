@@ -44,18 +44,17 @@ This example demonstrates how one could use the GetSections() and GetKeys() meth
 
 ```vb.net
 Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
+
 Dim Msg: Msg = "INI File Outline:" & vbCrLf & vbCrLf
 
-Dim Sections: Sections = INI.GetSections()
-Dim Section
-
-If UBound(Sections) > -1 Then
+Dim Sections: Sections = INI.GetSections() ' array of section names
+If UBound(Sections) > -1 Then ' if there are no sections (UBound() = -1), the array is empty
+	Dim Section
 	For Each Section In Sections
 		Msg = Msg & "- " & Section & vbCrLf
 		
-		Dim Keys: Keys = INI.GetKeys(Section)
+		Dim Keys: Keys = INI.GetKeys(Section) ' array of a section's key names
 		Dim Key
-		
 		For Each Key In Keys
 			Msg = Msg & "  - " & Key & vbCrLf
 		Next
@@ -82,6 +81,14 @@ INI File Outline:
   - test key 4
 - test section 5
   - test key 5
+```
+
+If this code is run on an empty file, or a randomly formatted file with no `[Sections]`, the message box will contain the following text:
+
+```
+INI File Outline:
+
+INI File Is Empty
 ```
 
 Notes
