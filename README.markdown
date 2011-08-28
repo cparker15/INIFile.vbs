@@ -6,7 +6,7 @@ Usage Examples
 SetValue(), GetValue(), Load(), Save()
 --------------------------------------
 
-```
+```vb.net
 Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
 INI.SetValue "test section 1", "test key 1", "test value 1"
 INI.SetValue "test section 2", "test key 2", "test value 2"
@@ -42,7 +42,7 @@ GetSections(), GetKeys()
 
 This example demonstrates how one could use the GetSections() and GetKeys() methods to create an outline of an INI file.
 
-```
+```vb.net
 Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
 Dim Msg: Msg = "INI File Outline:" & vbCrLf & vbCrLf
 
