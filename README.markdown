@@ -3,7 +3,7 @@
 Usage Examples
 ==============
 
-SetValue(), GetValue(), Load(), Save()
+`SetValue()`, `GetValue()`, `Load()`, `Save()`
 --------------------------------------
 
 ```vb.net
@@ -20,7 +20,7 @@ INI.Save
 MsgBox "test section 5, test key 5: " & INI.GetValue("test section 5", "test key 5")
 ```
 
-This example results in an INI file named "MyIniFile.ini", located in the current working directory, that looks like the following output.
+This example results in an INI file named *MyIniFile.ini*, located in the current working directory, that looks like the following output:
 
 ```
 [test section 1]
@@ -37,10 +37,10 @@ test key 5=test value 5
 
 It then displays a message box with the text `test section 5, test key 5: test value 5`.
 
-GetSections(), GetKeys()
+`GetSections()`, `GetKeys()`
 ------------------------
 
-This example demonstrates how one could use the GetSections() and GetKeys() methods to create an outline of an INI file.
+This example demonstrates how one could use the `GetSections()` and `GetKeys()` methods to create an outline of an INI file.
 
 ```vb.net
 Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the contents of the file
@@ -66,7 +66,7 @@ End If
 MsgBox Msg
 ```
 
-Assuming the **SetValue(), GetValue(), Load(), Save()** example code was just run, this code produces a message box with the following text:
+Assuming the **`SetValue()`, `GetValue()`, `Load()`, `Save()`** example code was just run, this code produces a message box with the following text:
 
 ```
 INI File Outline:
