@@ -48,7 +48,7 @@ Dim INI: Set INI = (New INIFile)("MyIniFile.ini") ' automatically loads the cont
 Dim Msg: Msg = "INI File Outline:" & vbCrLf & vbCrLf
 
 Dim Sections: Sections = INI.GetSections() ' array of section names
-If UBound(Sections) > -1 Then ' if there are no sections (UBound() = -1), the array is empty
+If UBound(Sections) > -1 Then ' if there are no sections, the array is empty (UBound() = -1)
 	Dim Section
 	For Each Section In Sections
 		Msg = Msg & "- " & Section & vbCrLf
